@@ -1,0 +1,75 @@
+{
+  "name": "mcp-limitless",
+  "version": "0.1.0",
+  "description": "A Model Context Protocol server for accessing Limitless AI lifelog data",
+  "author": {
+    "name": "Ben Hofferber",
+    "url": "https://hint.services",
+    "social": {
+      "bluesky": "https://bsky.app/profile/benhofferber.com"
+    }
+  },
+  "private": false,
+  "type": "module",
+  "bin": {
+    "mcp-limitless": "build/index.js"
+  },
+  "files": [
+    "build",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "prebuild": "npm run lint && npm run format",
+    "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
+    "watch": "tsc --watch",
+    "inspector": "npx @modelcontextprotocol/inspector node build/index.js",
+    "dev": "concurrently \"npm run watch\" \"npm run inspector\"",
+    "debug": "node --inspect build/index.js",
+    "debug:watch": "concurrently \"npm run watch\" \"npm run debug\"",
+    "logs": "tail -n 20 -F ~/Library/Logs/Claude/mcp*.log",
+    "clean": "rm -rf build",
+    "start": "node build/index.js",
+    "test": "vitest",
+    "lint": "biome check ./src",
+    "lint:fix": "biome check --apply ./src",
+    "format": "biome format ./src",
+    "format:fix": "biome format --write ./src",
+    "smithery:build": "docker build -t mcp-limitless -f Dockerfile.smithery .",
+    "smithery:run": "docker run -i --rm mcp-limitless"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.9.0",
+    "@smithery/sdk": "latest",
+    "axios": "^1.8.4",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@types/node": "^20.11.24",
+    "concurrently": "^8.2.2",
+    "typescript": "^5.3.3",
+    "vitest": "^3.2.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hint-services/mcp-limitless.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hint-services/mcp-limitless/issues"
+  },
+  "homepage": "https://github.com/hint-services/mcp-limitless#readme",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "limitless",
+    "ai",
+    "lifelog",
+    "assistant",
+    "claude",
+    "typescript"
+  ]
+}
