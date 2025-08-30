@@ -1,6 +1,6 @@
 {
   "name": "mcp-limitless",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A Model Context Protocol server for accessing Limitless AI lifelog data",
   "author": {
     "name": "Ben Hofferber",

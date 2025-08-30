@@ -79,14 +79,11 @@ async function main() {
     );
   }
 
-  // Validate and create Limitless client config
-  const limitlessConfig = LimitlessConfigSchema.parse({
-    apiKey: limitlessApiKey,
-    baseUrl: limitlessBaseUrl,
-  });
-
   const server = createServer({
-    config: limitlessConfig,
+    config: {
+      apiKey: limitlessApiKey || "",
+      baseUrl: limitlessBaseUrl,
+    },
   });
 
   try {
