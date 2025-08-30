@@ -5,54 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.3.0] - 2025-06-13
+## [0.2.0] - 2024-08-30
 
 ### Added
-- **Enhanced `searchFiles` tool** with `searchIn` parameter supporting `filename`, `path`, `content`, `all` modes
-- Filename search using GitHub's `filename:` qualifier for exact filename matching
-- Path search using `in:path` qualifier for file path matching
-- Comprehensive search mode using `in:file,path` qualifier (new default)
-- Match type indicators in search results (📝 filename, 📁 path, 📄 content)
-- Search tips displayed when no results found
+- **HTTP Streaming Interface**: Migrated from Docker to HTTP streaming using Smithery SDK
+- **Factory Pattern Architecture**: Added `createServer()` export for HTTP streaming compatibility
+- **Dual Transport Support**: HTTP streaming (default) and stdio (legacy) interfaces
+- **Hot Reloading Development**: Enhanced development experience with `pnpm run dev`
+- **Smithery Configuration**: Added `smithery.yaml` for HTTP streaming deployment
+- **Build System Enhancement**: Separate build commands for HTTP (`build:http`) and stdio (`build:stdio`)
 
 ### Changed
-- Default search behavior now searches across filenames, paths, and content
-- Improved GitHub search query construction with proper qualifiers
-- Enhanced result formatting with match reasoning
+- **Default Interface**: HTTP streaming is now the default deployment method
+- **Version Bump**: Updated to v0.2.0 across package.json and smithery.yaml
+- **Development Workflow**: `pnpm run dev` now uses Smithery CLI with hot reloading
+- **Dependencies**: Updated to `@modelcontextprotocol/sdk@1.17.4` and `@smithery/sdk@1.5.6`
+- **Module Configuration**: Added `module: "src/index.ts"` to package.json
 
-### Fixed
-- Issue where filename searches like "OKR 2025" required content matches
+### Removed
+- **Docker Dependencies**: Removed `Dockerfile`, `Dockerfile.smithery`, and `.dockerignore`
+- **Docker Scripts**: Removed `smithery:build` and `smithery:run` npm scripts
 
-## [0.2.0] - 2025-05-26
+### Migration
+- **Backwards Compatible**: Existing stdio integrations continue to work via `*:stdio` commands
+- **Performance Improvement**: HTTP streaming offers better performance than Docker-based deployment
+- **Simplified Deployment**: No Docker runtime required for HTTP streaming interface
 
-### Added
-
-- **New Tool: `getCommitHistory`** - Get commit history and file changes/diffs for the last X days
-  - Diff-focused approach with `includeDiffs: true` by default
-  - Rich commit metadata with GitHub URLs for linking
-  - Author filtering and pagination support
-  - Performance-balanced defaults (25 max commits, 8000 char diff limit)
-  - Comprehensive error handling and input validation
-
-### Changed
-
-- Updated documentation with commit history tool examples and usage patterns
-- Added new examples directory with detailed commit history examples
-- Enhanced getting started guide with commit history workflows
-
-### Documentation
-
-- Added `docs/examples/commit-history-examples.md` with comprehensive usage examples
-- Updated all documentation files to include the new tool
-- Added testing guidelines for the commit history tool
-- Updated contributing guidelines with commit history tool considerations
-
-## [0.1.1] - Previous Release
+## [0.1.1] - 2024-08-29
 
 ### Features
-
-- GitHub repository search functionality
-- File content retrieval
-- Issue search capabilities
-- Type-safe implementation with Zod validation
-- Rate limiting and error handling
+- **Limitless AI Integration**: Direct access to lifelog data via official API
+- **MCP Tools**: `getLifelogs`, `getLifelogEntry`, and `searchLifelogs` functionality
+- **Type-Safe Implementation**: Written in TypeScript with Zod validation
+- **Error Handling**: Comprehensive error handling with informative messages
+- **Pagination Support**: Cursor-based pagination for large lifelog datasets
+- **Environment Configuration**: API access via `LIMITLESS_API_KEY` and optional `LIMITLESS_BASE_URL`

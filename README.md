@@ -207,10 +207,26 @@ mcp-limitless/
 ### Development Commands
 
 - `pnpm install` - Install dependencies
-- `pnpm run build` - Build the project
-- `pnpm run dev` - Run in development mode with inspector
-- `pnpm run inspector` - Launch MCP inspector for testing
+- `pnpm run build` - Build the project for HTTP streaming (default)
+- `pnpm run dev` - Run in development mode with hot reloading
+- `pnpm run inspector` - Launch MCP inspector for testing (stdio mode)
 - `pnpm run test` - Run tests
+
+### Deployment Options
+
+#### HTTP Streaming (Recommended)
+```bash
+pnpm run build:http
+pnpm run start:http
+```
+
+#### Traditional stdio (Legacy)
+```bash
+pnpm run build:stdio  
+pnpm run start:stdio
+```
+
+The HTTP streaming interface offers better performance and simplified deployment without requiring Docker, while maintaining full backwards compatibility with the traditional stdio interface.
 
 ### API Reference
 

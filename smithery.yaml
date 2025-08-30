@@ -1,38 +1,7 @@
 # Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
 
 name: "@Hint-Services/mcp-limitless"
-description: "A TypeScript-based Model Context Protocol (MCP) server for accessing Limitless AI lifelog data"
-version: "0.1.0"
+description: "A Model Context Protocol server for accessing Limitless AI lifelog data"
+version: "0.2.0" # Updated version for HTTP streaming migration
 
-startCommand:
-  type: stdio
-  configSchema:
-    type: object
-    title: "Limitless AI MCP Configuration"
-    description: "Configuration options for the Limitless AI MCP server"
-    properties:
-      limitlessApiKey:
-        type: string
-        description: "Your Limitless AI API key (get from https://www.limitless.ai/developers)"
-      limitlessBaseUrl:
-        type: string
-        description: "Limitless AI API base URL (defaults to https://api.limitless.ai)"
-        default: "https://api.limitless.ai"
-    required: ["limitlessApiKey"]
-  commandFunction: |-
-    (config) => ({
-      command: 'node',
-      args: ['build/index.js'],
-      env: {
-        NODE_ENV: 'production',
-        LIMITLESS_API_KEY: config.limitlessApiKey || '',
-        LIMITLESS_BASE_URL: config.limitlessBaseUrl || 'https://api.limitless.ai',
-      }
-    })
-
-clients:
-  - claude
-  - cursor
-  - windsurf
-  - cline
-  - typescript
+runtime: "typescript"

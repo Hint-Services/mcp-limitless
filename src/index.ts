@@ -17,42 +17,47 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import type { z } from "zod";
 import { LimitlessClient } from "./limitless/client.js";
 import { LimitlessConfigSchema } from "./limitless/types.js";
 
-// Read Limitless config from environment variables
-const limitlessApiKey = process.env.LIMITLESS_API_KEY;
-const limitlessBaseUrl =
-  process.env.LIMITLESS_BASE_URL || "https://api.limitless.ai";
+export const configSchema = LimitlessConfigSchema;
 
-if (!limitlessApiKey) {
-  throw new Error(
-    "Environment variable LIMITLESS_API_KEY is required. Get your API key from https://www.limitless.ai/developers"
-  );
+export default function createServer({
+  config,
+}: {
+  config: z.infer<typeof configSchema>;
+}) {
+  const server = new McpServer({
+    name: "mcp-limitless",
+    version: "0.2.0",
+    capabilities: {
+      tools: {},
+      resources: {},
+      prompts: {},
+      streaming: true,
+    },
+  });
+
+  // Create LimitlessClient with provided config
+  const limitlessClient = new LimitlessClient(config);
+
+  // Register Limitless tools
+  try {
+    limitlessClient.registerLimitlessTools(server);
+    logMessage("info", "Successfully registered all Limitless AI tools");
+  } catch (error) {
+    logMessage(
+      "error",
+      `Failed to register tools: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
+    );
+    throw error;
+  }
+
+  return server;
 }
-
-// Validate and create Limitless client config
-const limitlessConfig = LimitlessConfigSchema.parse({
-  apiKey: limitlessApiKey,
-  baseUrl: limitlessBaseUrl,
-});
-
-// Create LimitlessClient with full config
-const limitlessClient = new LimitlessClient(limitlessConfig);
-
-/**
- * Create a new MCP server instance with full capabilities
- */
-const server = new McpServer({
-  name: "mcp-limitless",
-  version: "0.1.0",
-  capabilities: {
-    tools: {},
-    resources: {},
-    prompts: {},
-    streaming: true,
-  },
-});
 
 /**
  * Helper function to send log messages to the client
@@ -61,66 +66,39 @@ function logMessage(level: "info" | "warn" | "error", message: string) {
   console.error(`[${level.toUpperCase()}] ${message}`);
 }
 
-/**
- * Set up error handling for the server
- */
-process.on("uncaughtException", (error: Error) => {
-  logMessage("error", `Uncaught error: ${error.message}`);
-  console.error("Server error:", error);
-});
-
-// Register Limitless tools
-try {
-  limitlessClient.registerLimitlessTools(server);
-  logMessage("info", "Successfully registered all Limitless AI tools");
-} catch (error) {
-  logMessage(
-    "error",
-    `Failed to register tools: ${
-      error instanceof Error ? error.message : "Unknown error"
-    }`
-  );
-  process.exit(1);
-}
-
-/**
- * Set up proper cleanup on process termination
- */
-async function cleanup() {
-  try {
-    await server.close();
-    logMessage("info", "Server shutdown completed");
-  } catch (error) {
-    logMessage(
-      "error",
-      `Error during shutdown: ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`
-    );
-  } finally {
-    process.exit(0);
-  }
-}
-
-// Handle termination signals
-process.on("SIGTERM", cleanup);
-process.on("SIGINT", cleanup);
-
-/**
- * Main server startup function
- */
+// Keep main function for stdio compatibility
 async function main() {
+  // Environment variable validation moved inside main()
+  const limitlessApiKey = process.env.LIMITLESS_API_KEY;
+  const limitlessBaseUrl =
+    process.env.LIMITLESS_BASE_URL || "https://api.limitless.ai";
+
+  if (!limitlessApiKey) {
+    console.error(
+      "Environment variable LIMITLESS_API_KEY is required. Get your API key from https://www.limitless.ai/developers"
+    );
+  }
+
+  // Validate and create Limitless client config
+  const limitlessConfig = LimitlessConfigSchema.parse({
+    apiKey: limitlessApiKey,
+    baseUrl: limitlessBaseUrl,
+  });
+
+  const server = createServer({
+    config: limitlessConfig,
+  });
+
   try {
     // Set up communication with the MCP host using stdio transport
     const transport = new StdioServerTransport();
     await server.connect(transport);
 
-    logMessage("info", "MCP Server started successfully");
+    console.error("[INFO] MCP Server started successfully");
     console.error("MCP Server running on stdio transport");
   } catch (error) {
-    logMessage(
-      "error",
-      `Failed to start server: ${
+    console.error(
+      `[ERROR] Failed to start server: ${
         error instanceof Error ? error.message : "Unknown error"
       }`
     );
@@ -128,7 +106,7 @@ async function main() {
   }
 }
 
-// Start the server
+// Only run main if this file is executed directly
 main().catch((error) => {
   console.error("Fatal error in main():", error);
   process.exit(1);
