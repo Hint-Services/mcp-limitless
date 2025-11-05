@@ -83,23 +83,9 @@ function logMessage(level: "info" | "warn" | "error", message: string) {
 
 // Keep main function for stdio compatibility
 async function main() {
-  // Environment variable validation moved inside main()
-  const limitlessApiKey = process.env.LIMITLESS_API_KEY;
-  const limitlessBaseUrl =
-    process.env.LIMITLESS_BASE_URL || "https://api.limitless.ai";
-
-  if (!limitlessApiKey) {
-    console.error(
-      "Environment variable LIMITLESS_API_KEY is required. Get your API key from https://www.limitless.ai/developers"
-    );
-  }
-
-  const server = createServer({
-    config: {
-      apiKey: limitlessApiKey || "",
-      baseUrl: limitlessBaseUrl,
-    },
-  });
+  // Config will automatically use LIMITLESS_API_KEY from environment
+  // Validation happens in LimitlessClient constructor for fail-fast behavior
+  const server = createServer();
 
   try {
     // Set up communication with the MCP host using stdio transport
