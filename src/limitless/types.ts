@@ -4,7 +4,7 @@ import { z } from "zod";
  * Configuration for the Limitless API client
  */
 export const LimitlessConfigSchema = z.object({
-  apiKey: z.string().min(1, "Limitless API key is required"),
+  apiKey: z.string().optional().default(""),
   baseUrl: z.string().url().default("https://api.limitless.ai"),
 });
 

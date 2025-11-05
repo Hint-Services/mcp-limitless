@@ -18,11 +18,19 @@ export class LimitlessClient {
     this.api = axios.create({
       baseURL: config.baseUrl,
       headers: {
-        "X-API-Key": config.apiKey,
+        "X-API-Key": config.apiKey || "",
         "Content-Type": "application/json",
       },
       timeout: 30000, // 30 second timeout
     });
+  }
+
+  private validateApiKey(): void {
+    if (!this.config.apiKey || this.config.apiKey.trim() === "") {
+      throw new Error(
+        "Limitless API key is required. Please set LIMITLESS_API_KEY environment variable or provide it in the config. Get your API key from https://www.limitless.ai/developers"
+      );
+    }
   }
 
   // Simplified error handler for API requests
@@ -51,6 +59,7 @@ export class LimitlessClient {
   async getLifelogs(
     params: ListLifelogsParams = { limit: 10 }
   ): Promise<ListLifelogsResponse> {
+    this.validateApiKey();
     return this.handleRequest(async () => {
       return this.api.get("/v1/lifelogs", { params });
     });
@@ -60,6 +69,7 @@ export class LimitlessClient {
    * Get a specific lifelog entry by ID
    */
   async getLifelog(lifelogId: string): Promise<LifelogEntry> {
+    this.validateApiKey();
     const response = await this.handleRequest<GetLifelogResponse>(async () => {
       return this.api.get(`/v1/lifelogs/${lifelogId}`);
     });
@@ -72,6 +82,7 @@ export class LimitlessClient {
   async searchLifelogs(
     params: SearchLifelogsParams
   ): Promise<ListLifelogsResponse> {
+    this.validateApiKey();
     // Since the API doesn't have a search endpoint yet, we'll get all entries
     // and filter them locally. This is a temporary solution.
     const allEntries = await this.getLifelogs({
@@ -105,6 +116,195 @@ export class LimitlessClient {
       },
       meta: allEntries.meta,
     };
+  }
+
+  registerLimitlessResources(server: McpServer) {
+    // Resource for today's lifelogs
+    server.resource(
+      "today-lifelogs",
+      "limitless://lifelogs/today",
+      {
+        description: "Today's lifelog entries from your Limitless AI pendant",
+        mimeType: "text/markdown",
+      },
+      async () => {
+        try {
+          const today = new Date().toISOString().split("T")[0];
+          const response = await this.getLifelogs({ date: today, limit: 10 });
+
+          if (response.data.lifelogs.length === 0) {
+            return {
+              contents: [
+                {
+                  uri: "limitless://lifelogs/today",
+                  text: `No lifelog entries found for today (${today}).`,
+                  mimeType: "text/plain",
+                },
+              ],
+            };
+          }
+
+          let content = `# Today's Lifelog Entries (${today})\n\n`;
+          content += `Found ${response.data.lifelogs.length} entries:\n\n`;
+
+          for (const entry of response.data.lifelogs) {
+            content += `## ${entry.title}\n`;
+            content += `**ID:** ${entry.id}\n`;
+            content += `**Time:** ${new Date(entry.startTime).toLocaleString()} - ${new Date(entry.endTime).toLocaleString()}\n`;
+            if (entry.isStarred) {
+              content += "**Status:** ⭐ Starred\n";
+            }
+            content += "\n";
+          }
+
+          return {
+            contents: [
+              {
+                uri: "limitless://lifelogs/today",
+                text: content,
+                mimeType: "text/markdown",
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            contents: [
+              {
+                uri: "limitless://lifelogs/today",
+                text: `Error fetching today's lifelogs: ${error instanceof Error ? error.message : "Unknown error"}`,
+                mimeType: "text/plain",
+              },
+            ],
+          };
+        }
+      }
+    );
+
+    // Resource for recent lifelogs (last 7 days)
+    server.resource(
+      "recent-lifelogs",
+      "limitless://lifelogs/recent",
+      {
+        description: "Recent lifelog entries from the past 7 days",
+        mimeType: "text/markdown",
+      },
+      async () => {
+        try {
+          const response = await this.getLifelogs({ limit: 10 });
+
+          if (response.data.lifelogs.length === 0) {
+            return {
+              contents: [
+                {
+                  uri: "limitless://lifelogs/recent",
+                  text: "No recent lifelog entries found.",
+                  mimeType: "text/plain",
+                },
+              ],
+            };
+          }
+
+          let content = "# Recent Lifelog Entries\n\n";
+          content += `Found ${response.data.lifelogs.length} recent entries:\n\n`;
+
+          for (const entry of response.data.lifelogs) {
+            content += `## ${entry.title}\n`;
+            content += `**ID:** ${entry.id}\n`;
+            content += `**Time:** ${new Date(entry.startTime).toLocaleString()}\n`;
+            content += "\n";
+          }
+
+          return {
+            contents: [
+              {
+                uri: "limitless://lifelogs/recent",
+                text: content,
+                mimeType: "text/markdown",
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            contents: [
+              {
+                uri: "limitless://lifelogs/recent",
+                text: `Error fetching recent lifelogs: ${error instanceof Error ? error.message : "Unknown error"}`,
+                mimeType: "text/plain",
+              },
+            ],
+          };
+        }
+      }
+    );
+  }
+
+  registerLimitlessPrompts(server: McpServer) {
+    // Prompt to review today's activities
+    server.prompt(
+      "review-today",
+      "Review today's lifelog activities",
+      async () => {
+        const today = new Date().toISOString().split("T")[0];
+        return {
+          messages: [
+            {
+              role: "user",
+              content: {
+                type: "text",
+                text: `Please review my lifelog entries from today (${today}). Summarize the key conversations, topics discussed, and any important moments. Use the getLifelogs tool with today's date.`,
+              },
+            },
+          ],
+        };
+      }
+    );
+
+    // Prompt to search for specific topics
+    server.prompt(
+      "find-topic",
+      "Search for a specific topic in lifelogs",
+      {
+        topic: z
+          .string()
+          .describe("The topic or keyword to search for in your lifelogs"),
+      },
+      async ({ topic }) => {
+        return {
+          messages: [
+            {
+              role: "user",
+              content: {
+                type: "text",
+                text: `Search my lifelog entries for discussions about "${topic}". Use the searchLifelogs tool and provide a summary of what was discussed, when it was discussed, and any key insights.`,
+              },
+            },
+          ],
+        };
+      }
+    );
+
+    // Prompt to analyze recent patterns
+    server.prompt(
+      "analyze-week",
+      "Analyze patterns from the past week",
+      async () => {
+        const today = new Date();
+        const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const weekAgoStr = weekAgo.toISOString().split("T")[0];
+
+        return {
+          messages: [
+            {
+              role: "user",
+              content: {
+                type: "text",
+                text: `Analyze my lifelog entries from the past week (starting from ${weekAgoStr}). Identify recurring themes, topics I've discussed multiple times, and any patterns in my conversations or activities. Use getLifelogs with appropriate date filters.`,
+              },
+            },
+          ],
+        };
+      }
+    );
   }
 
   registerLimitlessTools(server: McpServer) {
@@ -144,6 +344,12 @@ export class LimitlessClient {
           .optional()
           .default(10)
           .describe("Number of entries to retrieve (max 10)"),
+      },
+      {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
       },
       async (params) => {
         const response = await this.getLifelogs(params);
@@ -214,6 +420,12 @@ export class LimitlessClient {
           .string()
           .min(1)
           .describe("The unique ID of the lifelog entry to retrieve"),
+      },
+      {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
       },
       async ({ lifelog_id }) => {
         const entry = await this.getLifelog(lifelog_id);
@@ -299,6 +511,12 @@ export class LimitlessClient {
           .optional()
           .default(10)
           .describe("Maximum number of results to return (max 10)"),
+      },
+      {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
       },
       async (params) => {
         const response = await this.searchLifelogs(params);

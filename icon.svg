@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Background circle with gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e0e7ff;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="80" fill="url(#bgGradient)"/>
+
+  <!-- Infinity symbol representing "limitless" -->
+  <path d="M 180 256 C 180 220, 150 200, 120 200 C 70 200, 50 240, 50 256 C 50 272, 70 312, 120 312 C 150 312, 180 292, 180 256
+           M 180 256 C 180 220, 210 200, 240 200 L 272 200 C 302 200, 332 220, 332 256 C 332 292, 302 312, 272 312 L 240 312 C 210 312, 180 292, 180 256
+           M 332 256 C 332 220, 362 200, 392 200 C 442 200, 462 240, 462 256 C 462 272, 442 312, 392 312 C 362 312, 332 292, 332 256"
+        fill="url(#iconGradient)" stroke="none" opacity="0.9"/>
+
+  <!-- Timeline dots representing lifelog entries -->
+  <circle cx="256" cy="140" r="12" fill="#ffffff" opacity="0.9"/>
+  <circle cx="256" cy="180" r="8" fill="#ffffff" opacity="0.7"/>
+  <circle cx="256" cy="360" r="10" fill="#ffffff" opacity="0.8"/>
+  <circle cx="256" cy="400" r="12" fill="#ffffff" opacity="0.9"/>
+
+  <!-- Connection lines for timeline -->
+  <line x1="256" y1="152" x2="256" y2="172" stroke="#ffffff" stroke-width="3" opacity="0.5"/>
+  <line x1="256" y1="188" x2="256" y2="350" stroke="#ffffff" stroke-width="3" opacity="0.3" stroke-dasharray="8,8"/>
+  <line x1="256" y1="370" x2="256" y2="388" stroke="#ffffff" stroke-width="3" opacity="0.5"/>
+
+  <!-- Small memory/recording indicator -->
+  <circle cx="320" cy="140" r="6" fill="#ff6b6b" opacity="0.9"/>
+  <circle cx="320" cy="140" r="10" fill="none" stroke="#ff6b6b" stroke-width="2" opacity="0.6">
+    <animate attributeName="r" from="10" to="16" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" from="0.6" to="0" dur="2s" repeatCount="indefinite"/>
+  </circle>
+</svg>
