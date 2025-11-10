@@ -106,20 +106,38 @@ async function main() {
 }
 
 // Only run main if this file is executed directly (not imported as a module)
-// This check ensures stdio transport is only used when running standalone,
-// not when imported by Smithery for HTTP streaming
-// Note: import.meta.url will be undefined when bundled to CJS by Smithery
-if (import.meta.url && process.argv[1]) {
+// This allows HTTP servers to import createServer without requiring env vars
+// When run via npx or as a binary, process.argv[1] should match this file
+const isMainModule = (() => {
+  if (!process.argv[1]) return false;
+
   try {
-    const modulePath = fileURLToPath(import.meta.url);
-    if (modulePath === process.argv[1]) {
-      main().catch((error) => {
-        console.error("Fatal error in main():", error);
-        process.exit(1);
-      });
-    }
+    const currentFile = fileURLToPath(import.meta.url);
+    const execFile = process.argv[1];
+
+    // Normalize paths for comparison
+    const normalizePath = (p: string) => p.replace(/\\/g, "/");
+    const normalizedCurrent = normalizePath(currentFile);
+    const normalizedExec = normalizePath(execFile);
+
+    // Check exact match or if execFile contains the filename
+    return (
+      normalizedCurrent === normalizedExec ||
+      normalizedExec.endsWith("/index.js") ||
+      normalizedExec.includes("mcp-limitless")
+    );
   } catch {
-    // fileURLToPath might fail in bundled CJS, which is fine
-    // In that case, we don't run main()
+    // Fallback: if execFile contains index.js or mcp-limitless, assume main module
+    return (
+      process.argv[1].includes("index.js") ||
+      process.argv[1].includes("mcp-limitless")
+    );
   }
+})();
+
+if (isMainModule) {
+  main().catch((error) => {
+    console.error("Fatal error in main():", error);
+    process.exit(1);
+  });
 }
