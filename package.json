@@ -1,6 +1,6 @@
 {
   "name": "mcp-limitless",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "A Model Context Protocol server for accessing Limitless AI lifelog data",
   "license": "MIT",
   "author": {
@@ -45,10 +45,13 @@
     "format:fix": "biome format --write ./src"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.17.4",
-    "@smithery/sdk": "1.5.6",
-    "tsx": "^4.20.5",
+    "@modelcontextprotocol/sdk": "1.21.1",
+    "@smithery/sdk": "1.7.4",
     "axios": "^1.8.4",
+    "chalk": "^5.6.2",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "tsx": "^4.20.5",
     "zod": "^3.24.2"
   },
   "devDependencies": {
