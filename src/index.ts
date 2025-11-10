@@ -24,10 +24,19 @@ import { LimitlessConfigSchema } from "./limitless/types.js";
 export const configSchema = LimitlessConfigSchema;
 
 export default function createServer({
-  config,
+  config = {},
 }: {
-  config: z.infer<typeof configSchema>;
-}) {
+  config?: Partial<z.infer<typeof configSchema>>;
+} = {}) {
+  // Parse config with defaults
+  const parsedConfig = configSchema.parse({
+    apiKey: config?.apiKey || process.env.LIMITLESS_API_KEY || "",
+    baseUrl:
+      config?.baseUrl ||
+      process.env.LIMITLESS_BASE_URL ||
+      "https://api.limitless.ai",
+  });
+
   const server = new McpServer({
     name: "mcp-limitless",
     version: "0.2.0",
@@ -39,17 +48,23 @@ export default function createServer({
     },
   });
 
-  // Create LimitlessClient with provided config
-  const limitlessClient = new LimitlessClient(config);
+  // Create LimitlessClient with parsed config
+  const limitlessClient = new LimitlessClient(parsedConfig);
 
-  // Register Limitless tools
+  // Register Limitless resources, prompts, and tools
   try {
+    limitlessClient.registerLimitlessResources(server);
+    logMessage("info", "Successfully registered all Limitless AI resources");
+
+    limitlessClient.registerLimitlessPrompts(server);
+    logMessage("info", "Successfully registered all Limitless AI prompts");
+
     limitlessClient.registerLimitlessTools(server);
     logMessage("info", "Successfully registered all Limitless AI tools");
   } catch (error) {
     logMessage(
       "error",
-      `Failed to register tools: ${
+      `Failed to register resources, tools, and prompts: ${
         error instanceof Error ? error.message : "Unknown error"
       }`
     );
@@ -68,23 +83,9 @@ function logMessage(level: "info" | "warn" | "error", message: string) {
 
 // Keep main function for stdio compatibility
 async function main() {
-  // Environment variable validation moved inside main()
-  const limitlessApiKey = process.env.LIMITLESS_API_KEY;
-  const limitlessBaseUrl =
-    process.env.LIMITLESS_BASE_URL || "https://api.limitless.ai";
-
-  if (!limitlessApiKey) {
-    console.error(
-      "Environment variable LIMITLESS_API_KEY is required. Get your API key from https://www.limitless.ai/developers"
-    );
-  }
-
-  const server = createServer({
-    config: {
-      apiKey: limitlessApiKey || "",
-      baseUrl: limitlessBaseUrl,
-    },
-  });
+  // Config will automatically use LIMITLESS_API_KEY from environment
+  // Validation happens in LimitlessClient constructor for fail-fast behavior
+  const server = createServer();
 
   try {
     // Set up communication with the MCP host using stdio transport

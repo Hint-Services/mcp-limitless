@@ -3,10 +3,24 @@ import { z } from "zod";
 /**
  * Configuration for the Limitless API client
  */
-export const LimitlessConfigSchema = z.object({
-  apiKey: z.string().min(1, "Limitless API key is required"),
-  baseUrl: z.string().url().default("https://api.limitless.ai"),
-});
+export const LimitlessConfigSchema = z
+  .object({
+    apiKey: z
+      .string()
+      .optional()
+      .describe(
+        "Limitless API token. If not provided, will use LIMITLESS_API_KEY environment variable."
+      ),
+    baseUrl: z
+      .string()
+      .url()
+      .optional()
+      .default("https://api.limitless.ai")
+      .describe(
+        "Base URL for Limitless API. Defaults to https://api.limitless.ai"
+      ),
+  })
+  .default({});
 
 export type LimitlessConfig = z.infer<typeof LimitlessConfigSchema>;
 
