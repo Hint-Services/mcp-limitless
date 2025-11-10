@@ -2,6 +2,6 @@
 
 name: "@Hint-Services/mcp-limitless"
 description: "A Model Context Protocol server for accessing Limitless AI lifelog data"
-version: "0.2.1" # Hotfix for stdio initialization
+version: "0.3.0"
 
 runtime: "typescript"

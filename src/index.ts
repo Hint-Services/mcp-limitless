@@ -17,6 +17,7 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { fileURLToPath } from "node:url";
 import type { z } from "zod";
 import { LimitlessClient } from "./limitless/client.js";
 import { LimitlessConfigSchema } from "./limitless/types.js";
@@ -39,7 +40,7 @@ export default function createServer({
 
   const server = new McpServer({
     name: "mcp-limitless",
-    version: "0.2.0",
+    version: "0.3.0",
     capabilities: {
       tools: {},
       resources: {},
@@ -104,8 +105,21 @@ async function main() {
   }
 }
 
-// Only run main if this file is executed directly
-main().catch((error) => {
-  console.error("Fatal error in main():", error);
-  process.exit(1);
-});
+// Only run main if this file is executed directly (not imported as a module)
+// This check ensures stdio transport is only used when running standalone,
+// not when imported by Smithery for HTTP streaming
+// Note: import.meta.url will be undefined when bundled to CJS by Smithery
+if (import.meta.url && process.argv[1]) {
+  try {
+    const modulePath = fileURLToPath(import.meta.url);
+    if (modulePath === process.argv[1]) {
+      main().catch((error) => {
+        console.error("Fatal error in main():", error);
+        process.exit(1);
+      });
+    }
+  } catch {
+    // fileURLToPath might fail in bundled CJS, which is fine
+    // In that case, we don't run main()
+  }
+}
