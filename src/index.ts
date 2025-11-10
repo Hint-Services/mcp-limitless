@@ -17,6 +17,7 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { fileURLToPath } from "node:url";
 import type { z } from "zod";
 import { LimitlessClient } from "./limitless/client.js";
 import { LimitlessConfigSchema } from "./limitless/types.js";
@@ -39,7 +40,7 @@ export default function createServer({
 
   const server = new McpServer({
     name: "mcp-limitless",
-    version: "0.2.0",
+    version: "0.3.0",
     capabilities: {
       tools: {},
       resources: {},
@@ -104,8 +105,39 @@ async function main() {
   }
 }
 
-// Only run main if this file is executed directly
-main().catch((error) => {
-  console.error("Fatal error in main():", error);
-  process.exit(1);
-});
+// Only run main if this file is executed directly (not imported as a module)
+// This allows HTTP servers to import createServer without requiring env vars
+// When run via npx or as a binary, process.argv[1] should match this file
+const isMainModule = (() => {
+  if (!process.argv[1]) return false;
+
+  try {
+    const currentFile = fileURLToPath(import.meta.url);
+    const execFile = process.argv[1];
+
+    // Normalize paths for comparison
+    const normalizePath = (p: string) => p.replace(/\\/g, "/");
+    const normalizedCurrent = normalizePath(currentFile);
+    const normalizedExec = normalizePath(execFile);
+
+    // Check exact match or if execFile contains the filename
+    return (
+      normalizedCurrent === normalizedExec ||
+      normalizedExec.endsWith("/index.js") ||
+      normalizedExec.includes("mcp-limitless")
+    );
+  } catch {
+    // Fallback: if execFile contains index.js or mcp-limitless, assume main module
+    return (
+      process.argv[1].includes("index.js") ||
+      process.argv[1].includes("mcp-limitless")
+    );
+  }
+})();
+
+if (isMainModule) {
+  main().catch((error) => {
+    console.error("Fatal error in main():", error);
+    process.exit(1);
+  });
+}
