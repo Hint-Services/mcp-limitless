@@ -1,5 +1,6 @@
 [![smithery badge](https://smithery.ai/badge/@Hint-Services/mcp-limitless)](https://smithery.ai/server/@Hint-Services/mcp-limitless)
 [![npm version](https://img.shields.io/npm/v/mcp-limitless)](https://www.npmjs.com/package/mcp-limitless)
+[![npm downloads](https://img.shields.io/npm/dm/mcp-limitless)](https://www.npmjs.com/package/mcp-limitless)
 
 # Limitless AI MCP Server
 
